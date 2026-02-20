@@ -337,8 +337,13 @@
                         </div>
 
                         {hasKids && (
-                            <div className={`mt-2 text-[8px] text-[#C5A55A] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                                ▼
+                            <div className={`mt-2 flex flex-col items-center gap-1 transition-all duration-500 ${isOpen ? 'opacity-40' : 'opacity-100'}`}>
+                                <div className="text-[8px] text-[#C5A55A] tracking-widest uppercase mb-1">
+                                    {isOpen ? 'Жабу' : 'Жаю'}
+                                </div>
+                                <div className={`text-[10px] text-[#C5A55A] transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}>
+                                    ▼
+                                </div>
                             </div>
                         )}
                     </div>
@@ -378,13 +383,16 @@
 
                     {hasKids && isOpen && isSplit && (
                         <>
-                            <div className="h-6 w-[1px] bg-[#C5A55A40]" />
-                            <div className="flex gap-4 md:gap-8 justify-center flex-wrap relative">
-                                <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#C5A55A40] to-transparent" />
+                            <div className="h-8 w-[1px] bg-gradient-to-b from-[#C5A55A40] to-[#C5A55A20]" />
+                            <div className="flex gap-4 md:gap-12 justify-center items-start relative px-4">
+                                {/* Horizontal Connection Line */}
+                                <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-[#C5A55A40] to-transparent" />
+                                
                                 {node.children.map((ch, i) => (
-                                    <div key={ch.id} className="flex flex-col items-center">
-                                        <div className={`w-[1px] h-4 ${ch.highlight || ch.isMainLine ? 'bg-[#C5A55A40]' : 'bg-[#1a1a1a]'}`} />
-                                        <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={delay + 80 + i * 60} />
+                                    <div key={ch.id} className="flex flex-col items-center relative animate-in fade-in slide-in-from-top-4 duration-700" style={{ animationDelay: `${i * 150}ms` }}>
+                                        {/* Vertical connector to horizontal line */}
+                                        <div className={`w-[1px] h-6 ${ch.highlight || ch.isMainLine ? 'bg-[#C5A55A40]' : 'bg-[#1a1a1a]'}`} />
+                                        <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={delay + 100 + i * 100} />
                                     </div>
                                 ))}
                             </div>
@@ -395,7 +403,7 @@
         }
 
         function ShezhireTreeSection({ onBack }) {
-            const [expanded, setExpanded] = useState(new Set(["alash"]));
+            const [expanded, setExpanded] = useState(new Set(["alash", "kishi-zhuz", "qayyrbay"]));
 
             const toggle = (id) => {
                 setExpanded(prev => {

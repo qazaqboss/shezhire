@@ -1,0 +1,363 @@
+import { useState, useEffect, useCallback } from "react";
+
+const GOLD = "#c8a85c";
+const GOLD_LIGHT = "#e8d5a0";
+const GOLD_DIM = "#8a7340";
+const BG = "#0a0a10";
+const BG_CARD = "#14141e";
+const BG_HOVER = "#1c1c28";
+const WHITE = "#f0ece4";
+const DIM = "#7a7570";
+const SUBTLE = "#2a2a35";
+
+const TREE = {
+  id: "baitemir", name: "Байтемір", gen: 1,
+  siblings: ["Қосқұлақ", "Қосақ", "Досақ", "Жантемір", "Байторы"],
+  children: [{
+    id: "tanas", name: "Танас", gen: 2,
+    siblings: ["Мырзабай", "Ерше"],
+    children: [{
+      id: "zhuas", name: "Жуас", gen: 3,
+      siblings: ["Құдас", "Манабай", "Жанабай"],
+      children: [{
+        id: "kunash", name: "Күнәш", gen: 4,
+        siblings: ["Белес", "Жұлдыз", "Шеген", "Байсымақ"],
+        children: [{
+          id: "otar", name: "Отар", gen: 5,
+          siblings: ["Теңізбай", "Ниәз", "Ырғызбай", "Отаралы"],
+          children: [{
+            id: "qoilybai", name: "Қойлыбай", gen: 6,
+            siblings: ["Тәжі", "Тәкеш"],
+            children: [{
+              id: "alibi", name: "Әліби", gen: 7,
+              siblings: ["Қали", "Ағытай", "Тәбілбай", "Байжан", "Лайық"],
+              children: [
+                {
+                  id: "qairat", name: "Қайрат", gen: 8, isMainLine: true,
+                  children: [
+                    {
+                      id: "aset", name: "Әсет", gen: 9, highlight: true, label: "Менің жолым",
+                      children: [
+                        { id: "damir", name: "Дамир", gen: 10, highlight: true, label: "Ұлым", order: "Үлкен" },
+                        { id: "sultan", name: "Сұлтан", gen: 10, order: "Ортаншы" },
+                        { id: "batyr", name: "Батыр", gen: 10, order: "Кіші" },
+                      ]
+                    },
+                    {
+                      id: "arsen", name: "Арсен", gen: 9, label: "Бауырым",
+                      children: [
+                        { id: "dani", name: "Дани", gen: 10, order: "Үлкен" },
+                        { id: "bari", name: "Бари", gen: 10, order: "Кіші" },
+                      ]
+                    },
+                  ]
+                },
+                {
+                  id: "asqar", name: "Асқар", gen: 8,
+                  children: [{
+                    id: "timur", name: "Тимур", gen: 9,
+                    children: [
+                      { id: "sanzhar", name: "Санжар", gen: 10, order: "Үлкен" },
+                      { id: "arslan", name: "Арслан", gen: 10, order: "Кіші" },
+                    ]
+                  }]
+                },
+              ]
+            }]
+          }]
+        }]
+      }]
+    }]
+  }]
+};
+
+function getAllIds(node) {
+  let ids = [node.id];
+  (node.children || []).forEach(ch => { ids = ids.concat(getAllIds(ch)); });
+  return ids;
+}
+
+const TamgaSVG = ({ size = 40, opacity = 0.3 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ opacity }}>
+    <path d="M15 8L20 32" stroke={GOLD} strokeWidth="1.5"/>
+    <path d="M25 8L20 32" stroke={GOLD} strokeWidth="1.5"/>
+    <path d="M20 32L20 38" stroke={GOLD} strokeWidth="1.5"/>
+  </svg>
+);
+
+function Node({ node, expanded, onToggle, delay = 0 }) {
+  const [vis, setVis] = useState(false);
+  const [hov, setHov] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVis(true), delay); return () => clearTimeout(t); }, [delay]);
+
+  const hasKids = node.children && node.children.length > 0;
+  const hasSibs = node.siblings && node.siblings.length > 0;
+  const isOpen = expanded.has(node.id);
+  const isHL = node.highlight;
+  const isMain = node.isMainLine;
+
+  return (
+    <div style={{
+      opacity: vis ? 1 : 0,
+      transform: vis ? "translateY(0)" : "translateY(16px)",
+      transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)",
+    }}>
+      <div
+        onClick={() => hasKids && onToggle(node.id)}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          background: isHL ? "linear-gradient(135deg,#16160e,#1e1e10)" : hov ? BG_HOVER : BG_CARD,
+          border: isHL ? `2px solid ${GOLD}` : isMain ? `1.5px solid ${GOLD_DIM}` : `1px solid ${SUBTLE}`,
+          borderRadius: 14,
+          padding: node.gen <= 3 ? "18px 28px" : "14px 22px",
+          cursor: hasKids ? "pointer" : "default",
+          textAlign: "center",
+          minWidth: node.gen >= 9 ? 120 : 150,
+          position: "relative",
+          boxShadow: isHL ? `0 0 30px rgba(200,168,92,0.12)` : hov ? `0 6px 24px rgba(0,0,0,0.4)` : `0 2px 8px rgba(0,0,0,0.2)`,
+          transition: "all 0.25s ease",
+        }}
+      >
+        {isHL && <div style={{
+          position: "absolute", inset: 0, borderRadius: 14,
+          background: "radial-gradient(ellipse at center, rgba(200,168,92,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}/>}
+
+        {node.order && (
+          <div style={{ fontSize: 9, color: GOLD_DIM, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase", fontFamily: "serif" }}>
+            {node.order}
+          </div>
+        )}
+
+        <div style={{
+          fontSize: node.gen <= 2 ? 17 : node.gen <= 7 ? 15 : 14,
+          fontWeight: isHL ? 700 : 600,
+          color: isHL ? GOLD_LIGHT : WHITE,
+          letterSpacing: node.gen <= 3 ? 2 : 0.5,
+          fontFamily: "'Cormorant Garamond','Georgia',serif",
+        }}>
+          {node.name}
+        </div>
+
+        {node.label && (
+          <div style={{ fontSize: 9, color: GOLD, marginTop: 3, letterSpacing: 2, textTransform: "uppercase", fontFamily: "serif" }}>
+            {node.label}
+          </div>
+        )}
+
+        {node.gen && (
+          <div style={{ fontSize: 8, color: DIM, marginTop: 4, letterSpacing: 1 }}>
+            {node.gen}-ұрпақ
+          </div>
+        )}
+
+        {hasKids && (
+          <div style={{
+            position: "absolute", bottom: 4, left: "50%",
+            transform: `translateX(-50%) rotate(${isOpen ? 180 : 0}deg)`,
+            transition: "transform 0.3s", color: GOLD_DIM, fontSize: 8,
+          }}>▼</div>
+        )}
+      </div>
+
+      {hasSibs && isOpen && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 8, justifyContent: "center" }}>
+          {node.siblings.map((s, i) => (
+            <div key={s} style={{
+              background: "rgba(200,168,92,0.04)",
+              border: `1px solid rgba(200,168,92,0.12)`,
+              borderRadius: 8, padding: "5px 12px",
+              fontSize: 11, color: DIM,
+              fontFamily: "'Cormorant Garamond',serif",
+              animation: `fadeIn 0.3s ease ${i * 0.06}s both`,
+            }}>{s}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TreeBranch({ node, expanded, onToggle, delay = 0 }) {
+  const isOpen = expanded.has(node.id);
+  const hasKids = node.children && node.children.length > 0;
+  const isSplit = hasKids && node.children.length > 1;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Node node={node} expanded={expanded} onToggle={onToggle} delay={delay} />
+
+      {hasKids && isOpen && !isSplit && (
+        <>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 32 }}>
+            <div style={{ width: 1, flex: 1, background: `linear-gradient(to bottom, ${GOLD_DIM}, ${GOLD}40)`, position: "relative" }}>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 4, height: 4, borderRadius: "50%", background: GOLD, opacity: 0.5 }}/>
+            </div>
+          </div>
+          <TreeBranch node={node.children[0]} expanded={expanded} onToggle={onToggle} delay={delay + 60} />
+        </>
+      )}
+
+      {hasKids && isOpen && isSplit && (
+        <>
+          <div style={{ height: 24, width: 1, background: GOLD_DIM }}/>
+          <div style={{
+            display: "flex", gap: node.gen >= 8 ? 20 : 36,
+            justifyContent: "center", flexWrap: "wrap",
+            position: "relative",
+          }}>
+            <div style={{
+              position: "absolute", top: 0,
+              left: "10%", right: "10%", height: 1,
+              background: `linear-gradient(to right, transparent, ${GOLD_DIM}, transparent)`,
+            }}/>
+            {node.children.map((ch, i) => (
+              <div key={ch.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ width: 1, height: 18, background: ch.highlight || ch.isMainLine ? GOLD_DIM : SUBTLE }}/>
+                <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={delay + 80 + i * 60} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function ShezhireTree() {
+  const [expanded, setExpanded] = useState(new Set(["baitemir"]));
+  const [intro, setIntro] = useState(true);
+
+  useEffect(() => { setTimeout(() => setIntro(false), 2200); }, []);
+
+  const toggle = useCallback((id) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const expandAll = () => setExpanded(new Set(getAllIds(TREE)));
+  const collapseAll = () => setExpanded(new Set(["baitemir"]));
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: BG, color: WHITE,
+      fontFamily: "'Cormorant Garamond','Georgia',serif",
+      position: "relative", overflow: "hidden",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; }
+        @keyframes float {
+          0%,100% { transform: translateY(0) translateX(0); }
+          33% { transform: translateY(-15px) translateX(8px); }
+          66% { transform: translateY(-25px) translateX(-5px); }
+        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes introOut { 0%{opacity:1} 75%{opacity:1} 100%{opacity:0;pointer-events:none} }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 15px rgba(200,168,92,0.08)} 50%{box-shadow:0 0 30px rgba(200,168,92,0.15)} }
+        @keyframes spin { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
+        ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:${BG}} ::-webkit-scrollbar-thumb{background:${GOLD_DIM};border-radius:3px}
+      `}</style>
+
+      {/* Particles */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+        {Array.from({ length: 25 }).map((_, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            width: 1.5 + Math.random() * 1.5, height: 1.5 + Math.random() * 1.5,
+            borderRadius: "50%", background: GOLD,
+            opacity: 0.08 + Math.random() * 0.1,
+            left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+            animation: `float ${8 + Math.random() * 10}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * 5}s`,
+          }}/>
+        ))}
+      </div>
+
+      {/* Decorative ring */}
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%,-50%)",
+        width: 500, height: 500,
+        border: `1px solid rgba(200,168,92,0.025)`,
+        borderRadius: "50%", pointerEvents: "none",
+        animation: "spin 100s linear infinite",
+      }}/>
+
+      {/* Intro */}
+      {intro && (
+        <div style={{
+          position: "fixed", inset: 0, background: BG, zIndex: 100,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          animation: "introOut 2.2s ease forwards",
+        }}>
+          <TamgaSVG size={60} opacity={0.5} />
+          <div style={{ fontSize: 32, fontWeight: 300, letterSpacing: 8, color: GOLD, marginTop: 16, textTransform: "uppercase" }}>
+            ШЕЖІРЕ
+          </div>
+          <div style={{ fontSize: 13, letterSpacing: 4, color: DIM, marginTop: 8, textTransform: "uppercase" }}>
+            Жеті Ата · Әлімұлы
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: `linear-gradient(to bottom, ${BG} 60%, transparent)`,
+        padding: "20px 28px 36px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <TamgaSVG size={28} opacity={0.4} />
+            <div style={{ fontSize: 24, fontWeight: 300, letterSpacing: 5, color: GOLD, textTransform: "uppercase" }}>ШЕЖІРЕ</div>
+          </div>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: DIM, marginTop: 4, marginLeft: 40 }}>
+            ӘЛІМҰЛЫ · КІШІ ЖҮЗ · ҚАРАМАШАҚ-ТӨРТҚАРА
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {[["Ашу", expandAll, GOLD_DIM, GOLD], ["Жабу", collapseAll, "rgba(255,255,255,0.08)", DIM]].map(([label, fn, border, color]) => (
+            <button key={label} onClick={fn} style={{
+              background: "transparent", border: `1px solid ${border}`,
+              color, padding: "7px 18px", borderRadius: 8, cursor: "pointer",
+              fontSize: 11, letterSpacing: 2, textTransform: "uppercase",
+              fontFamily: "'Cormorant Garamond',serif", transition: "all 0.2s",
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tree */}
+      <div style={{ padding: "0 28px 140px", position: "relative", zIndex: 1 }}>
+        <TreeBranch node={TREE} expanded={expanded} onToggle={toggle} delay={intro ? 2300 : 0} />
+      </div>
+
+      {/* Stats */}
+      <div style={{ position: "fixed", bottom: 20, right: 20, display: "flex", gap: 12, zIndex: 50 }}>
+        {[["Ұрпақ", "10"], ["Жеті ата", "✓"]].map(([label, val]) => (
+          <div key={label} style={{
+            background: `${BG_CARD}ee`, border: `1px solid rgba(200,168,92,0.12)`,
+            borderRadius: 10, padding: "10px 16px", backdropFilter: "blur(8px)",
+            animation: val === "✓" ? "pulse 3s ease infinite" : "none",
+          }}>
+            <div style={{ fontSize: 9, letterSpacing: 2, color: DIM, textTransform: "uppercase" }}>{label}</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: GOLD }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, height: 70,
+        background: `linear-gradient(to top, ${BG}, transparent)`,
+        pointerEvents: "none", zIndex: 40,
+      }}/>
+    </div>
+  );
+}

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="kk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHEJIRE AI — Цифровое Наследие Кочевников</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #080808;
+            --bg-surface: #0D0D0D;
+            --gold-primary: #C5A55A;
+            --gold-deep: #8B6914;
+            --gold-glow: rgba(197, 165, 90, 0.15);
+            --node-w: 180px;
+            --node-w-deep: 140px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --node-w: 140px;
+                --node-w-deep: 110px;
+            }
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .gold-pill {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-deep) 100%);
+            color: black;
+        }
+
+        .glass-card {
+            background: var(--bg-surface);
+            border: 1px solid #1a1a1a;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(197, 165, 90, 0.4);
+            box-shadow: 0 0 30px var(--gold-glow);
+            transform: translateY(-4px);
+        }
+
+        .tamga-glow {
+            text-shadow: 0 0 15px rgba(197, 165, 90, 0.6);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translateY(-40px) translateX(20px);
+                opacity: 0.8;
+            }
+        }
+
+        .animate-float {
+            animation: float 10s ease-in-out infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #080808;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #222;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        const ZHUZES = {
+            ULY: "Ұлы жүз",
+            ORTA: "Орта жүз",
+            KISHI: "Кіші жүз",
+            AKSUYEK: "Ақсүйек"
+        };
+
+        const TRIBES_DB = {
+            // Ұлы жүз
+            qanly: { name: "ҚАҢЛЫ", juz: ZHUZES.ULY, tamga: "⩚", tamgaName: "Көсеу", color: "#C5A55A", story: "Қаңлы — древнее племя, упоминаемое в источниках задолго до нашей эры. Они были мощной силой в Сырдарьинском регионе. По Темиргалиеву, Канглы являются наследниками могущественной державы Кангюй.", era: "III в. до н.э. — XVIII в." },
+            shanyshqyly: { name: "ШАНЫШҚЫЛЫ", juz: ZHUZES.ULY, tamga: "⋔", tamgaName: "Шанышқы", color: "#C5A55A", story: "Шанышқылы — воинственное племя Старшего жуза. Исторически связаны с Канджыгалы. Сыграли важную роль в защите южных рубежей Казахского ханства." },
+            sirgeli: { name: "СІРГЕЛІ", juz: ZHUZES.ULY, tamga: "⊓", tamgaName: "Сірге", color: "#C5A55A", story: "Сиргели получили название от знака 'сирге' — путы для жеребят. Это племя славилось своими табунами и мастерством в коневодстве." },
+            shaqsham: { name: "ШАҚШАМ", juz: ZHUZES.ULY, tamga: "ᗕ", tamgaName: "Тамға", color: "#C5A55A", story: "Малочисленное, но гордое объединение в составе Старшего жуза, сохранившее свою идентичность через века." },
+            saryuysin: { name: "САРЫҮЙСІН", juz: ZHUZES.ULY, tamga: "⚭", tamgaName: "Абақ", color: "#C5A55A", story: "Прямые наследники древних Усуней, господствовавших в Семиречье в античную эпоху. 'Сары' указывает на древность или благородство происхождения." },
+            shapyrashty: { name: "ШАПЫРАШТЫ", juz: ZHUZES.ULY, tamga: "∀", tamgaName: "Айыр", color: "#C5A55A", story: "Шапырашты — стражи Жетысу. Из этого рода вышли многие батыры, защищавшие Алматинский регион от набегов джунгар." },
+            jalayir: { name: "ЖАЛАЙЫР", juz: ZHUZES.ULY, tamga: "⫙", tamgaName: "Тарақ", color: "#C5A55A", story: "Жалайыры — одно из самых влиятельных племен в империи Чингисхана. Мукали-гоо-ван, правая рука Чингисхана, был жалайыром. В Казахском ханстве считались 'ноқта ағасы' — первенствующими в Старшем жузе." },
+            isty: { name: "ЫСТЫ", juz: ZHUZES.ULY, tamga: "⩔", tamgaName: "Көсеу", color: "#C5A55A", story: "Ысты — род, тесно связанный с Ошакты. Проживают преимущественно в Жамбылской области." },
+            oshaqty: { name: "ОШАҚТЫ", juz: ZHUZES.ULY, tamga: "⊼", tamgaName: "Ошақ", color: "#C5A55A", story: "Название рода происходит от 'ошақ' (очаг). Символ домашнего уюта и нерушимости семейных уз." },
+            alban: { name: "АЛБАН", juz: ZHUZES.ULY, tamga: "⧊", tamgaName: "Айыр", color: "#C5A55A", story: "Албаны — горные воины, хозяева Заилийского Алатау. Известны своим восстанием 1916 года против царской власти." },
+            suan: { name: "СУАН", juz: ZHUZES.ULY, tamga: "⩝", tamgaName: "Айыр", color: "#C5A55A", story: "Братское племя Альбанов и Дулатов. Кочевали в предгорьях Джунгарского Алатау." },
+            dulat: { name: "ДУЛАТ", juz: ZHUZES.ULY, tamga: "◯", tamgaName: "Дөңгелек", color: "#C5A55A", story: "Дулаты — самое многочисленное племя Старшего жуза. Состояли из четырех крупных родов: Ботпай, Шымыр, Сикым, Жаныс. Фактически контролировали Семиречье веками." },
+
+            // Орта жүз
+            argyn: { name: "АРҒЫН", juz: ZHUZES.ORTA, tamga: "△", tamgaName: "Үшкіл", color: "#C5A55A", story: "Аргыны — политический и интеллектуальный каркас Орта жуза. Племя биев, поэтов и дипломатов. Самый многочисленный род казахов сегодня." },
+            nayman: { name: "НАЙМАН", juz: ZHUZES.ORTA, tamga: "⩔", tamgaName: "Бақан", color: "#C5A55A", story: "Найманы — наследники великого Найманского ханства. Обладали развитой государственностью и письменностью задолго до возвышения монголов." },
+            qonyrat: { name: "ҚОҢЫРАТ", juz: ZHUZES.ORTA, tamga: "⧖", tamgaName: "Босаға", color: "#C5A55A", story: "Коныраты славились своей дипломатией. Из этого рода происходили жены многих ханов, включая Борте, супругу Чингисхана." },
+            qypshaq: { name: "ҚЫПШАҚ", juz: ZHUZES.ORTA, tamga: "⊥", tamgaName: "Қос алып", color: "#C5A55A", story: "Кыпчаки — хозяева Великой Степи (Дешт-и-Кыпчак). Их имя наводило трепет от Китая до Византии. Египетские мамлюки имели кыпчакское происхождение." },
+            kerey: { name: "КЕРЕЙ", juz: ZHUZES.ORTA, tamga: "🕀", tamgaName: "Абақ", color: "#C5A55A", story: "Кереи — одно из основателей Казахского ханства. Вместе с Жанибеком и Керей-ханами они составили ядро новой нации." },
+            uaq: { name: "УАҚ", juz: ZHUZES.ORTA, tamga: "⨼", tamgaName: "Уақ", color: "#C5A55A", story: "Воинственное племя, всегда ставившее интересы степи превыше всего. Известны своими батырами в войне с джунгарами." },
+
+            // Кіші жүз
+            alimuly: { name: "ӘЛІМҰЛЫ", juz: ZHUZES.KISHI, tamga: "⫝", tamgaName: "Шеге", color: "#C5A55A", story: "Алимулы — мощное объединение Младшего жуза. Из этого рода вышел знаменитый батыр Жалантос Бахадур, построивший медресе Шер-Дор в Самарканде." },
+            baiuly: { name: "БАЙҰЛЫ", juz: ZHUZES.KISHI, tamga: "⩓", tamgaName: "Таяқ", color: "#C5A55A", story: "Байулы — объединение из 12 родов (Адай, Берш, Шеркеш и др.). Основная сила Западного Казахстана." },
+            jetyru: { name: "ЖЕТІРУ", juz: ZHUZES.KISHI, tamga: "⧗", tamgaName: "Жеті", color: "#C5A55A", story: "Жетыру — союз семи родов, созданный по преданиям Тауке-ханом для укрепления обороноспособности степи." },
+        };
+
+        const SCREENS = { HOME: 'home', FLOW: 'flow', TREE: 'tree' };
+
+        // --- Shezhire Tree Data (Alash -> Damir: 21 Generations) ---
+        const TREE_DATA = {
+            id: "alash", name: "Алаш", gen: 1,
+            children: [
+                {
+                    id: "uly-zhuz", name: "Ұлы жүз", gen: 2, siblings: ["Орта жүз"], isBranch: true,
+                    children: [
+                        { id: "dulat", name: "Дулат", gen: 3 },
+                        { id: "alban", name: "Албан", gen: 3 },
+                        { id: "suan", name: "Суан", gen: 3 }
+                    ]
+                },
+                {
+                    id: "orta-zhuz", name: "Орта жүз", gen: 2, isBranch: true,
+                    children: [
+                        { id: "argyn", name: "Арғын", gen: 3 },
+                        { id: "nayman", name: "Найман", gen: 3 },
+                        { id: "kerey", name: "Керей", gen: 3 }
+                    ]
+                },
+                {
+                    id: "kishi-zhuz", name: "Кіші жүз", gen: 2,
+                    children: [{
+                        id: "qayyrbay", name: "Қайырбай-Қаракесек", gen: 3,
+                        children: [{
+                            id: "alim", name: "Әлім", gen: 4,
+                            children: [{
+                                id: "tortqara", name: "Қарамашақ-Төртқара", gen: 5,
+                                children: [{
+                                    id: "qarash", name: "Қараш", gen: 6,
+                                    children: [{
+                                        id: "aqpan", name: "Ақпан-Аппақ", gen: 7,
+                                        children: [{
+                                            id: "qulaman", name: "Құламан", gen: 8,
+                                            children: [{
+                                                id: "amantay", name: "Амантай", gen: 9,
+                                                children: [{
+                                                    id: "suyir", name: "Сүйір", gen: 10,
+                                                    children: [{
+                                                        id: "agym", name: "Ағым", gen: 11,
+                                                        children: [{
+                                                            id: "baitemir", name: "Байтемір", gen: 12,
+                                                            siblings: ["Қосқұлақ", "Қосақ", "Досақ", "Жантемір", "Байторы"],
+                                                            children: [{
+                                                                id: "tanas", name: "Танас", gen: 13,
+                                                                siblings: ["Мырзабай", "Ерше"],
+                                                                children: [{
+                                                                    id: "zhuas", name: "Жуас", gen: 14,
+                                                                    siblings: ["Құдас", "Манабай", "Жанабай"],
+                                                                    children: [{
+                                                                        id: "kunash", name: "Күнәш", gen: 15,
+                                                                        siblings: ["Белес", "Жұлдыз", "Шеген", "Байсымақ"],
+                                                                        children: [{
+                                                                            id: "otar", name: "Отар", gen: 16,
+                                                                            siblings: ["Теңізбай", "Ниәз", "Ырғызбай", "Отаралы"],
+                                                                            children: [{
+                                                                                id: "qoilybai", name: "Қойлыбай", gen: 17,
+                                                                                siblings: ["Тәжі", "Тәкеш"],
+                                                                                children: [{
+                                                                                    id: "alibi", name: "Әліби", gen: 18,
+                                                                                    siblings: ["Қали", "Ағытай", "Тәбілбай", "Байжан", "Лайық"],
+                                                                                    children: [
+                                                                                        {
+                                                                                            id: "qairat", name: "Қайрат", gen: 19,
+                                                                                            children: [
+                                                                                                {
+                                                                                                    id: "aset", name: "Әсет", gen: 20, highlight: true, label: "Мен",
+                                                                                                    children: [
+                                                                                                        { id: "damir", name: "Дамир", gen: 21, highlight: true, label: "Тұңғыш ұлым" },
+                                                                                                        { id: "sultan", name: "Султан", gen: 21, highlight: true, label: "Ортаншы ұлым" },
+                                                                                                        { id: "batyr", name: "Батыр", gen: 21, highlight: true, label: "Кіші ұлым" }
+                                                                                                    ]
+                                                                                                },
+                                                                                                {
+                                                                                                    id: "arsen", name: "Арсен", gen: 20, highlight: true, label: "Інім",
+                                                                                                    children: [
+                                                                                                        { id: "dani", name: "Дани", gen: 21, highlight: true, label: "Тұңғыш ұлы" },
+                                                                                                        { id: "bari", name: "Бари", gen: 21, highlight: true, label: "Кіші ұлы" }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            id: "askar", name: "Асқар", gen: 19, highlight: true, label: "Брат Кайрата",
+                                                                                            children: [
+                                                                                                {
+                                                                                                    id: "timur", name: "Тимур", gen: 20, highlight: true, label: "Сын Аскара",
+                                                                                                    children: [
+                                                                                                        { id: "sanzhar", name: "Санжар", gen: 21, highlight: true, label: "Ұлы" },
+                                                                                                        { id: "arystan", name: "Арыстан", gen: 21, highlight: true, label: "Ұлы" }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }]
+                                                                            }]
+                                                                        }]
+                                                                    }]
+                                                                }]
+                                                            }]
+                                                        }]
+                                                    }]
+                                                }]
+                                            }]
+                                        }]
+                                    }]
+                                }]
+                            }]
+                        }]
+                    }]
+                }
+            ]
+        };
+
+        // --- Layout Components ---
+
+        function Background() {
+            return (
+                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                        <div key={i} className="absolute w-1 h-3 bg-gold-primary opacity-20 rounded-full animate-float"
+                            style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 10}s` }} />
+                    ))}
+                    <div className="absolute inset-0 opacity-20"
+                        style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #1a1a1a 0%, transparent 70%)' }}></div>
+                </div>
+            );
+        }
+
+        function OrnamentLine() {
+            return (
+                <div className="flex items-center justify-center gap-4 my-8">
+                    <div className="w-16 h-[1px] bg-gradient-to-r from-transparent to-[#C5A55A]" />
+                    <div className="w-2 h-2 border border-[#C5A55A] rotate-45" />
+                    <div className="w-16 h-[1px] bg-gradient-to-l from-transparent to-[#C5A55A]" />
+                </div>
+            );
+        }
+
+        // --- Tree Components ---
+
+        function Node({ node, expanded, onToggle, delay = 0 }) {
+            const [vis, setVis] = useState(false);
+            const [hov, setHov] = useState(false);
+            useEffect(() => { const t = setTimeout(() => setVis(true), delay); return () => clearTimeout(t); }, [delay]);
+
+            const hasKids = node.children && node.children.length > 0;
+            const hasSibs = node.siblings && node.siblings.length > 0;
+            const isOpen = expanded.has(node.id);
+            const isHL = node.highlight;
+            const isMain = node.isMainLine;
+
+            return (
+                <div style={{
+                    opacity: vis ? 1 : 0,
+                    transform: vis ? "translateY(0)" : "translateY(16px)",
+                    transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)",
+                }}>
+                    <div
+                        onClick={() => hasKids && onToggle(node.id)}
+                        onMouseEnter={() => setHov(true)}
+                        onMouseLeave={() => setHov(false)}
+                        className={`glass-card p-4 md:p-6 flex flex-col items-center group relative overflow-hidden transition-all duration-300 ${isHL ? 'border-[#C5A55A] shadow-[0_0_30px_rgba(197,165,90,0.15)] scale-105' : 'border-[#1a1a1a]'}`}
+                        style={{
+                            minWidth: node.gen >= 9 ? 'var(--node-w-deep)' : 'var(--node-w)',
+                            borderRadius: 14,
+                            cursor: hasKids ? "pointer" : "default",
+                        }}
+                    >
+                        {isHL && <div className="absolute inset-0 bg-gradient-to-br from-[#C5A55A0A] to-transparent pointer-events-none" />}
+
+                        {node.order && (
+                            <div className="text-[9px] text-[#C5A55A] tracking-[0.2em] mb-1 uppercase font-serif">
+                                {node.order}
+                            </div>
+                        )}
+
+                        <div className={`font-serif leading-tight ${node.gen <= 3 ? 'text-lg' : 'text-base'} ${isHL ? 'text-[#C5A55A]' : 'text-white'}`}>
+                            {node.name}
+                        </div>
+
+                        {node.label && (
+                            <div className="text-[9px] text-[#C5A55A] mt-1 tracking-[0.2em] uppercase font-serif">
+                                {node.label}
+                            </div>
+                        )}
+
+                        <div className="text-[8px] text-[#555] mt-1 tracking-widest">
+                            {node.gen}-ұрпақ
+                        </div>
+
+                        {hasKids && (
+                            <div className={`mt-2 text-[8px] text-[#C5A55A] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                                ▼
+                            </div>
+                        )}
+                    </div>
+
+                    {hasSibs && isOpen && (
+                        <div className="flex flex-wrap gap-2 mt-4 justify-center animate-in fade-in slide-in-from-top-2">
+                            {node.siblings.map((s, i) => (
+                                <div key={s} className="px-3 py-1 rounded-lg border border-[#C5A55A1A] bg-[#C5A55A05] text-[10px] text-[#666] font-serif italic">
+                                    {s}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function TreeBranch({ node, expanded, onToggle, delay = 0 }) {
+            const isOpen = expanded.has(node.id);
+            const hasKids = node.children && node.children.length > 0;
+            const isSplit = hasKids && node.children.length > 1;
+
+            return (
+                <div className="flex flex-col items-center">
+                    <Node node={node} expanded={expanded} onToggle={onToggle} delay={delay} />
+
+                    {hasKids && isOpen && !isSplit && (
+                        <>
+                            <div className="flex flex-col items-center h-8">
+                                <div className="w-[1px] flex-1 bg-gradient-to-b from-[#C5A55A40] to-transparent relative">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#C5A55A] opacity-40" />
+                                </div>
+                            </div>
+                            <TreeBranch node={node.children[0]} expanded={expanded} onToggle={onToggle} delay={delay + 60} />
+                        </>
+                    )}
+
+                    {hasKids && isOpen && isSplit && (
+                        <>
+                            <div className="h-6 w-[1px] bg-[#C5A55A40]" />
+                            <div className="flex gap-4 md:gap-8 justify-center flex-wrap relative">
+                                <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#C5A55A40] to-transparent" />
+                                {node.children.map((ch, i) => (
+                                    <div key={ch.id} className="flex flex-col items-center">
+                                        <div className={`w-[1px] h-4 ${ch.highlight || ch.isMainLine ? 'bg-[#C5A55A40]' : 'bg-[#1a1a1a]'}`} />
+                                        <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={delay + 80 + i * 60} />
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        function ShezhireTreeSection({ onBack }) {
+            const [expanded, setExpanded] = useState(new Set(["alash"]));
+
+            const toggle = (id) => {
+                setExpanded(prev => {
+                    const next = new Set(prev);
+                    next.has(id) ? next.delete(id) : next.add(id);
+                    return next;
+                });
+            };
+
+            const getAllIds = (node) => {
+                let ids = [node.id];
+                (node.children || []).forEach(ch => { ids = ids.concat(getAllIds(ch)); });
+                return ids;
+            };
+
+            const expandAll = () => setExpanded(new Set(getAllIds(TREE_DATA)));
+            const collapseAll = () => setExpanded(new Set(["baitemir"]));
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-24 min-h-screen">
+                    <div className="flex justify-between items-center mb-10 md:mb-16">
+                        <button onClick={onBack} className="text-[#666] hover:text-[#C5A55A] transition-colors flex items-center gap-2 text-[10px] md:text-xs tracking-widest leading-none">
+                            ← <span className="hidden md:inline">НАЗАД К СЕТКЕ</span><span className="md:hidden">НАЗАД</span>
+                        </button>
+                        <div className="flex gap-4">
+                            <button onClick={expandAll} className="px-4 py-1.5 border border-[#C5A55A40] text-[#C5A55A] rounded-full text-[10px] tracking-widest uppercase hover:bg-[#C5A55A0A] transition-colors">Ашу</button>
+                            <button onClick={collapseAll} className="px-4 py-1.5 border border-[#1a1a1a] text-[#444] rounded-full text-[10px] tracking-widest uppercase hover:text-[#666] transition-colors">Жабу</button>
+                        </div>
+                    </div>
+
+                    <header className="text-center mb-16 md:mb-24 px-4">
+                        <h2 className="text-3xl md:text-6xl font-serif mb-3 md:mb-4 tracking-widest text-[#C5A55A] leading-tight">ШЕЖІРЕ ДРЕВО</h2>
+                        <p className="text-[#666] tracking-[0.3em] md:tracking-[0.4em] uppercase text-[8px] md:text-[10px] mb-6 md:mb-8">ӘЛІМҰЛЫ · КІШІ ЖҮЗ · ҚАРАМАШАҚ-ТӨРТҚАРА</p>
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="w-10 md:w-12 h-[1px] bg-[#C5A55A40]" />
+                            <div className="text-[20px] md:text-[24px] text-[#C5A55A] tamga-glow font-serif">⩔</div>
+                        </div>
+                    </header>
+
+                    <div className="relative z-10 overflow-x-auto pb-24">
+                        <TreeBranch node={TREE_DATA} expanded={expanded} onToggle={toggle} />
+                    </div>
+
+                    <div className="fixed bottom-6 right-6 md:bottom-12 md:right-12 z-50 flex gap-2 md:gap-4">
+                        <div className="glass-card px-3 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl flex flex-col items-center text-center">
+                            <span className="text-[8px] md:text-[10px] text-[#555] tracking-widest uppercase mb-1">Ұрпақ</span>
+                            <span className="text-xl md:text-2xl font-serif text-[#C5A55A]">21</span>
+                        </div>
+                        <div className="glass-card px-3 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl flex flex-col items-center text-center border-[#C5A55A40] animate-pulse">
+                            <span className="text-[8px] md:text-[10px] text-[#555] tracking-widest uppercase mb-1">Жеті ата</span>
+                            <span className="text-xl md:text-2xl font-serif text-[#C5A55A]">✓</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main App ---
+
+        function App() {
+            const [currentScreen, setCurrentScreen] = useState(SCREENS.HOME);
+            const [selectedTribe, setSelectedTribe] = useState(null);
+
+            const handleTribeClick = (key) => {
+                setSelectedTribe(key);
+                setCurrentScreen(SCREENS.FLOW);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const goToTree = () => {
+                setCurrentScreen(SCREENS.TREE);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            return (
+                <div className="relative z-10 min-h-screen">
+                    <Background />
+
+                    {currentScreen === SCREENS.HOME ? (
+                        <HomeScreen onTribeSelect={handleTribeClick} onTreeClick={goToTree} />
+                    ) : currentScreen === SCREENS.FLOW ? (
+                        <InteractiveFlow tribeKey={selectedTribe} onBack={() => setCurrentScreen(SCREENS.HOME)} onTreeFinish={goToTree} />
+                    ) : (
+                        <ShezhireTreeSection onBack={() => setCurrentScreen(SCREENS.HOME)} />
+                    )}
+
+                    <footer className="py-12 border-t border-[#1a1a1a] text-center text-[#444] text-xs uppercase tracking-widest">
+                        <p>© 2026 SHEJIRE AI · Цифровой Курултай</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // --- Home Page ---
+
+        function HomeScreen({ onTribeSelect, onTreeClick }) {
+            return (
+                <div className="max-w-7xl mx-auto px-6 pt-24">
+                    <header className="text-center mb-24">
+                        <div className="inline-block px-4 py-1 border border-[#C5A55A40] rounded-full text-[10px] tracking-[0.3em] text-[#C5A55A] uppercase mb-6">
+                            Smart Shejire Protocol v2.0
+                        </div>
+                        <h1 className="text-5xl md:text-8xl font-serif mb-6 tracking-tight">Шежіре</h1>
+                        <p className="text-[#999] max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-light italic px-4">
+                            «Племя — это государство. Тамга — это власть. Шежіре — это вечность.»
+                        </p>
+                        <OrnamentLine />
+                        <button onClick={onTreeClick} className="mt-8 px-8 py-3 border border-[#C5A55A] text-[#C5A55A] rounded-full text-xs tracking-widest uppercase hover:bg-[#C5A55A1A] transition-all duration-500 gold-pill-hover">
+                            Просмотр родового древа →
+                        </button>
+                    </header>
+
+                    <section className="mb-24 md:mb-32 grid md:grid-cols-2 gap-12 md:gap-16 items-center px-4">
+                        <div className="order-2 md:order-1">
+                            <h2 className="text-2xl md:text-3xl font-serif mb-4 md:mb-6">Почему это важно?</h2>
+                            <div className="space-y-4 md:space-y-6 text-[#ccc] leading-relaxed text-sm md:text-base">
+                                <p>
+                                    Шежіре — это не просто генеалогия, это генетический паспорт великой степи. На протяжении веков знание своих семи предков (Жеті Ата) спасало нашу нацию от биологического увядания и сохраняло политическое единство.
+                                </p>
+                                <p>
+                                    В эпоху искусственного интеллекта мы переносим это наследие в блокчейн. Каждая тамга здесь — это символ цифровой субъектности, ключ к голосу в родовом DAO.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="relative order-1 md:order-2">
+                            <div className="aspect-square glass-card rounded-full p-8 md:p-12 flex flex-col items-center justify-center text-center max-w-[300px] md:max-w-none mx-auto">
+                                <span className="text-6xl md:text-8xl text-[#C5A55A] tamga-glow font-serif mb-4">⩔</span>
+                                <h3 className="text-xl tracking-widest text-[#C5A55A] font-semibold mb-2">БАҚАН · ТАМҒА</h3>
+                                <p className="text-xs text-[#666] uppercase">Символ власти и преемственности</p>
+                            </div>
+                            <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#C5A55A1A] rounded-full blur-2xl"></div>
+                            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#C5A55A1A] rounded-full blur-3xl"></div>
+                        </div>
+                    </section>
+
+                    <section className="mb-24 px-4">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 border-b border-[#1a1a1a] pb-6">
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-serif mb-2">Таңдау сеткасы</h2>
+                                <p className="text-[#666] tracking-widest uppercase text-[10px] md:text-xs">Выберите свой род для начала пути</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 md:gap-4 mt-6 md:mt-0">
+                                {Object.values(ZHUZES).map(z => (
+                                    <span key={z} className="text-[10px] text-[#444] border border-[#222] px-3 py-1 rounded-full">{z}</span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tumalas Grid style */}
+                        <div className="space-y-16">
+                            <ZhuzSection title={ZHUZES.ULY} list={Object.entries(TRIBES_DB).filter(([_, t]) => t.juz === ZHUZES.ULY)} onSelect={onTribeSelect} />
+                            <ZhuzSection title={ZHUZES.ORTA} list={Object.entries(TRIBES_DB).filter(([_, t]) => t.juz === ZHUZES.ORTA)} onSelect={onTribeSelect} />
+                            <ZhuzSection title={ZHUZES.KISHI} list={Object.entries(TRIBES_DB).filter(([_, t]) => t.juz === ZHUZES.KISHI)} onSelect={onTribeSelect} />
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+
+        function ZhuzSection({ title, list, onSelect }) {
+            return (
+                <div className="group">
+                    <h3 className="text-[#C5A55A] text-[10px] md:text-xs font-semibold tracking-[0.3em] md:tracking-[0.5em] uppercase mb-6 md:mb-8 flex items-center gap-4">
+                        {title}
+                        <div className="h-[1px] flex-1 bg-gradient-to-r from-[#C5A55A40] to-transparent" />
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                        {list.map(([key, t]) => (
+                            <button
+                                key={key}
+                                onClick={() => onSelect(key)}
+                                className="glass-card rounded-2xl p-6 flex flex-col items-center group/card relative overflow-hidden"
+                            >
+                                <div className="text-3xl text-[#C5A55A] mb-4 tamga-glow group-hover/card:scale-125 transition-transform duration-500">
+                                    {t.tamga}
+                                </div>
+                                <span className="text-xs font-bold tracking-[0.2em] text-white">
+                                    {t.name}
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#C5A55A0A] opacity-0 group-hover/card:opacity-100 transition-opacity"></div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Interactive Flow Screens ---
+
+        function InteractiveFlow({ tribeKey, onBack, onTreeFinish }) {
+            const [step, setStep] = useState(0); // 0:Story, 1:JetiAta, 2:Mint, 3:Result
+            const [userData, setUserData] = useState({ name: "", ancestors: Array(7).fill("") });
+
+            const tribe = TRIBES_DB[tribeKey];
+
+            return (
+                <div className="max-w-4xl mx-auto px-6 py-24 min-h-screen content-center">
+                    <button onClick={onBack} className="text-[#666] hover:text-[#C5A55A] transition-colors mb-12 flex items-center gap-2 text-xs tracking-widest">
+                        ← НАЗАД К СЕТКЕ
+                    </button>
+
+                    {step === 0 && <StoryScreen tribe={tribe} onNext={() => setStep(1)} />}
+                    {step === 1 && <JetiAtaScreen tribe={tribe} data={userData} onChange={setUserData} onNext={() => setStep(2)} />}
+                    {step === 2 && <MintScreen tribe={tribe} data={userData} onNext={() => setStep(3)} />}
+                    {step === 3 && <ResultScreen tribe={tribe} data={userData} onRestart={onBack} onShowTree={onTreeFinish} />}
+                </div>
+            );
+        }
+
+        function StoryScreen({ tribe, onNext }) {
+            const [tab, setTab] = useState('history');
+
+            return (
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex flex-col items-center text-center mb-12">
+                        <div className="w-24 h-24 rounded-full border border-[#C5A55A40] flex items-center justify-center text-5xl text-[#C5A55A] tamga-glow mb-6">
+                            {tribe.tamga}
+                        </div>
+                        <h1 className="text-5xl font-serif tracking-widest mb-2">{tribe.name}</h1>
+                        <p className="text-[#C5A55A] text-[10px] tracking-[0.5em] uppercase font-bold">{tribe.juz}</p>
+                    </div>
+
+                    <div className="glass-card rounded-3xl p-8 mb-12">
+                        <p className="text-[#999] text-[10px] tracking-widest uppercase mb-4">Хроники племени</p>
+                        <p className="text-xl md:text-2xl font-serif leading-relaxed text-[#eee]">
+                            {tribe.story}
+                        </p>
+                    </div>
+
+                    <button onClick={onNext} className="w-full gold-pill py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition hover:scale-[1.02] shadow-xl">
+                        К верификации Жеті Ата →
+                    </button>
+                </div>
+            );
+        }
+
+        function JetiAtaScreen({ tribe, data, onChange, onNext }) {
+            const labels = ["Өзің (Ты)", "Әке (Отец)", "Ата (Дед)", "Арғы ата (Прадед)", "Баба (4-е колено)", "Түп ата (5-е колено)", "Тек ата (6-е колено)"];
+            const [error, setError] = useState("");
+
+            const validate = () => {
+                if (!data.name.trim()) { setError("Пожалуйста, введите свое имя"); return; }
+                const filled = data.ancestors.filter(a => a.trim()).length;
+                if (filled < 3) { setError("Назовите хотя бы 3 предков для продолжения"); return; }
+                onNext();
+            };
+
+            return (
+                <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+                    <h2 className="text-3xl font-serif text-center mb-12">Протокол верификации Наследия</h2>
+
+                    <div className="max-w-md mx-auto space-y-8">
+                        <div>
+                            <label className="text-[10px] tracking-[0.2em] text-[#C5A55A] block mb-2">ВАШЕ ИМЯ</label>
+                            <input
+                                value={data.name}
+                                onChange={e => onChange({ ...data, name: e.target.value })}
+                                className="w-full bg-[#0d0d0d] border border-[#222] rounded-xl px-4 py-3 outline-none focus:border-[#C5A55A80] transition"
+                                placeholder="Введите имя..."
+                            />
+                        </div>
+
+                        <div className="space-y-4 relative">
+                            <div className="absolute left-4 top-4 bottom-4 w-[1px] bg-[#222]" />
+                            {labels.map((l, i) => (
+                                <div key={i} className="flex gap-4 items-center">
+                                    <div className={`w-8 h-8 rounded-full flex-shrink-0 z-10 text-[10px] font-bold flex items-center justify-center border transition-colors ${data.ancestors[i] ? 'gold-pill border-[#C5A55A]' : 'bg-black border-[#222] text-[#444]'}`}>
+                                        {i + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-[9px] text-[#555] block uppercase mb-1">{l}</label>
+                                        <input
+                                            value={data.ancestors[i]}
+                                            onChange={e => {
+                                                const newA = [...data.ancestors]; newA[i] = e.target.value;
+                                                onChange({ ...data, ancestors: newA });
+                                            }}
+                                            className="w-full bg-transparent border-b border-[#222] py-2 text-sm focus:border-[#C5A55A] outline-none transition"
+                                            placeholder={`Имя ${i + 1}-го предка`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+
+                        <button onClick={validate} className="w-full gold-pill py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition hover:scale-[1.02]">
+                            ПРОВЕРИТЬ КОД РОДА
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function MintScreen({ tribe, data, onNext }) {
+            const [progress, setProgress] = useState(0);
+            const [status, setStatus] = useState("Инициализация...");
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setProgress(p => {
+                        if (p >= 100) { clearInterval(interval); setTimeout(onNext, 1000); return 100; }
+                        if (p < 30) setStatus("Запись в IPFS...");
+                        else if (p < 60) setStatus("Генерация смарт-контракта...");
+                        else if (p < 90) setStatus("Верификация на Polygon...");
+                        else setStatus("Минтинг завершен!");
+                        return p + Math.random() * 10;
+                    });
+                }, 400);
+                return () => clearInterval(interval);
+            }, []);
+
+            return (
+                <div className="text-center py-24">
+                    <div className="w-48 h-48 mx-auto mb-12 relative">
+                        <div className="absolute inset-0 border-4 border-[#C5A55A20] rounded-full"></div>
+                        <div className="absolute inset-0 border-t-4 border-[#C5A55A] rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center text-4xl text-[#C5A55A] tamga-glow">
+                            {tribe.tamga}
+                        </div>
+                    </div>
+                    <h2 className="text-3xl font-serif mb-4">Чеканка SBT Токена</h2>
+                    <p className="text-[#666] mb-12 tracking-widest uppercase text-xs">{status}</p>
+
+                    <div className="max-w-xs mx-auto h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#C5A55A] shadow-[0_0_10px_rgba(197,165,90,0.8)] transition-all" style={{ width: `${progress}%` }}></div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ResultScreen({ tribe, data, onRestart, onShowTree }) {
+            const txHash = `0x${Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+
+            return (
+                <div className="animate-in zoom-in-95 duration-700">
+                    <div className="glass-card rounded-[2.5rem] p-1 scale-105 rotate-1 mb-16 relative">
+                        <div className="bg-[#000] rounded-[2.4rem] p-8 text-center overflow-hidden">
+                            {/* Decorative Gold Header */}
+                            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#C5A55A1A] to-transparent"></div>
+
+                            <div className="relative z-10 pt-8">
+                                <div className="text-7xl text-[#C5A55A] tamga-glow font-serif mb-6">{tribe.tamga}</div>
+                                <h1 className="text-4xl font-serif tracking-tight mb-2 uppercase">{tribe.name}</h1>
+                                <p className="text-[#C5A55A] text-[10px] tracking-[0.5em] mb-8 uppercase font-bold">{tribe.juz}</p>
+
+                                <div className="border-t border-b border-[#1a1a1a] py-6 mb-8 text-left space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-[10px] text-[#444] uppercase tracking-widest">Владелец</span>
+                                        <span className="text-sm font-semibold">{data.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-[10px] text-[#444] uppercase tracking-widest">Глубина</span>
+                                        <span className="text-sm font-semibold">{data.ancestors.filter(a => a.trim()).length}/7 Ата</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-[10px] text-[#444] uppercase tracking-widest">Тип токена</span>
+                                        <span className="text-sm font-semibold text-[#4ade80]">Soulbound (SBT)</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#0a0a0a] rounded-xl p-4 mb-4 text-left border border-[#1a1a1a]">
+                                    <span className="text-[10px] text-[#444] uppercase block mb-1">Transaction Hash</span>
+                                    <code className="text-[10px] text-[#555] break-all">{txHash}</code>
+                                </div>
+                                <p className="text-[10px] text-[#444] tracking-widest uppercase mb-6">Verified by Shejire AI Consensus v2.0</p>
+
+                                <button onClick={onShowTree} className="w-full bg-[#4ade8020] border border-[#4ade8040] text-[#4ade80] py-4 rounded-xl font-bold tracking-[0.2em] uppercase transition hover:bg-[#4ade8030] mb-4">
+                                    Посмотреть мое древо
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onClick={onRestart} className="w-full border border-[#222] hover:border-[#C5A55A40] text-[#666] hover:text-[#C5A55A] py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition">
+                        ВЕРНУТЬСЯ В СТЕПЬ
+                    </button>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

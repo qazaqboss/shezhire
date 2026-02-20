@@ -304,44 +304,55 @@
                     transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)",
                 }}>
                     <div
-                        onClick={() => hasKids && onToggle(node.id)}
+                        onClick={(e) => {
+                            if (hasKids) {
+                                onToggle(node.id);
+                                setTimeout(() => {
+                                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                                }, 300);
+                            }
+                        }}
                         onMouseEnter={() => setHov(true)}
                         onMouseLeave={() => setHov(false)}
-                        className={`glass-card p-4 md:p-6 flex flex-col items-center group relative overflow-hidden transition-all duration-300 ${isHL ? 'border-[#C5A55A] shadow-[0_0_30px_rgba(197,165,90,0.15)] scale-105' : 'border-[#1a1a1a]'}`}
+                        className={`glass-card p-4 md:p-6 flex flex-col items-center group relative overflow-hidden transition-all duration-300 ${isHL ? 'border-[#C5A55A] shadow-[0_0_40px_rgba(197,165,90,0.25)] scale-110' : 'border-[#1a1a1a] shadow-lg'}`}
                         style={{
                             minWidth: node.gen >= 9 ? 'var(--node-w-deep)' : 'var(--node-w)',
-                            borderRadius: 14,
+                            borderRadius: 18,
                             cursor: hasKids ? "pointer" : "default",
+                            background: isHL ? 'linear-gradient(135deg, rgba(13,13,13,1) 0%, rgba(30,25,10,1) 100%)' : 'var(--bg-surface)'
                         }}
                     >
-                        {isHL && <div className="absolute inset-0 bg-gradient-to-br from-[#C5A55A0A] to-transparent pointer-events-none" />}
+                        {isHL && <div className="absolute inset-0 bg-gradient-to-br from-[#C5A55A1A] to-transparent pointer-events-none" />}
+                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                            <div className="w-1 h-1 rounded-full bg-[#C5A55A]" />
+                        </div>
 
                         {node.order && (
-                            <div className="text-[9px] text-[#C5A55A] tracking-[0.2em] mb-1 uppercase font-serif">
+                            <div className="text-[9px] text-[#C5A55A] tracking-[0.2em] mb-1 uppercase font-serif font-bold">
                                 {node.order}
                             </div>
                         )}
 
-                        <div className={`font-serif leading-tight ${node.gen <= 3 ? 'text-lg' : 'text-base'} ${isHL ? 'text-[#C5A55A]' : 'text-white'}`}>
+                        <div className={`font-serif leading-tight text-center ${node.gen <= 3 ? 'text-xl' : 'text-base'} ${isHL ? 'text-[#C5A55A] font-bold' : 'text-white'}`}>
                             {node.name}
                         </div>
 
                         {node.label && (
-                            <div className="text-[9px] text-[#C5A55A] mt-1 tracking-[0.2em] uppercase font-serif">
+                            <div className="text-[10px] text-[#C5A55A] mt-2 tracking-[0.1em] uppercase font-serif italic py-1 px-2 border border-[#C5A55A20] rounded-md bg-[#C5A55A05]">
                                 {node.label}
                             </div>
                         )}
 
-                        <div className="text-[8px] text-[#555] mt-1 tracking-widest">
+                        <div className="text-[9px] text-[#444] mt-2 tracking-widest uppercase font-medium">
                             {node.gen}-ұрпақ
                         </div>
 
                         {hasKids && (
-                            <div className={`mt-2 flex flex-col items-center gap-1 transition-all duration-500 ${isOpen ? 'opacity-40' : 'opacity-100'}`}>
-                                <div className="text-[8px] text-[#C5A55A] tracking-widest uppercase mb-1">
+                            <div className={`mt-3 flex flex-col items-center gap-1 transition-all duration-700 ${isOpen ? 'opacity-30 translate-y-1' : 'opacity-100'}`}>
+                                <div className="text-[9px] text-[#C5A55A] tracking-[0.2em] uppercase font-bold">
                                     {isOpen ? 'Жабу' : 'Жаю'}
                                 </div>
-                                <div className={`text-[10px] text-[#C5A55A] transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}>
+                                <div className={`text-[12px] text-[#C5A55A] transition-transform duration-700 ${isOpen ? 'rotate-180' : 'animate-bounce'}`}>
                                     ▼
                                 </div>
                             </div>
@@ -372,27 +383,40 @@
 
                     {hasKids && isOpen && !isSplit && (
                         <>
-                            <div className="flex flex-col items-center h-8">
-                                <div className="w-[1px] flex-1 bg-gradient-to-b from-[#C5A55A40] to-transparent relative">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#C5A55A] opacity-40" />
+                            <div className="flex flex-col items-center h-12">
+                                <div className="w-[1px] flex-1 bg-gradient-to-b from-[#C5A55A60] to-[#C5A55A20] relative">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-[#C5A55A] bg-black shadow-[0_0_10px_rgba(197,165,90,0.5)]" />
                                 </div>
                             </div>
-                            <TreeBranch node={node.children[0]} expanded={expanded} onToggle={onToggle} delay={delay + 60} />
+                            <TreeBranch node={node.children[0]} expanded={expanded} onToggle={onToggle} delay={0} />
                         </>
                     )}
 
                     {hasKids && isOpen && isSplit && (
                         <>
-                            <div className="h-8 w-[1px] bg-gradient-to-b from-[#C5A55A40] to-[#C5A55A20]" />
-                            <div className="flex gap-4 md:gap-12 justify-center items-start relative px-4">
-                                {/* Horizontal Connection Line */}
-                                <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-[#C5A55A40] to-transparent" />
-                                
+                            <div className="h-12 w-[1px] bg-gradient-to-b from-[#C5A55A60] to-[#C5A55A30]" />
+                            <div className="flex gap-6 md:gap-16 justify-center items-start relative px-4 pt-10">
+                                {/* Curved SVG Connectors */}
+                                <svg className="absolute top-0 left-0 w-full h-10 pointer-events-none overflow-visible" style={{ zIndex: -1 }}>
+                                    <defs>
+                                        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stopColor="#C5A55A" stopOpacity="0.6" />
+                                            <stop offset="100%" stopColor="#C5A55A" stopOpacity="0.2" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path
+                                        d={`M 50% 0 L 50% 0`}
+                                        className="stroke-[#C5A55A40] stroke-1 fill-none"
+                                    />
+                                </svg>
+
+                                <div className="absolute top-0 left-[20%] right-[20%] h-[1px] bg-gradient-to-r from-transparent via-[#C5A55A60] to-transparent" />
+
                                 {node.children.map((ch, i) => (
-                                    <div key={ch.id} className="flex flex-col items-center relative animate-in fade-in slide-in-from-top-4 duration-700" style={{ animationDelay: `${i * 150}ms` }}>
+                                    <div key={ch.id} className="flex flex-col items-center relative animate-in fade-in zoom-in slide-in-from-top-8 duration-1000" style={{ animationDelay: `${i * 300}ms`, transitionDelay: `${i * 300}ms` }}>
                                         {/* Vertical connector to horizontal line */}
-                                        <div className={`w-[1px] h-6 ${ch.highlight || ch.isMainLine ? 'bg-[#C5A55A40]' : 'bg-[#1a1a1a]'}`} />
-                                        <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={delay + 100 + i * 100} />
+                                        <div className={`w-[1px] h-10 ${ch.highlight || ch.isMainLine ? 'bg-[#C5A55A60]' : 'bg-[#1a1a1a]'}`} />
+                                        <TreeBranch node={ch} expanded={expanded} onToggle={onToggle} delay={0} />
                                     </div>
                                 ))}
                             </div>
@@ -403,7 +427,7 @@
         }
 
         function ShezhireTreeSection({ onBack }) {
-            const [expanded, setExpanded] = useState(new Set(["alash", "kishi-zhuz", "qayyrbay"]));
+            const [expanded, setExpanded] = useState(new Set(["alash"]));
 
             const toggle = (id) => {
                 setExpanded(prev => {
